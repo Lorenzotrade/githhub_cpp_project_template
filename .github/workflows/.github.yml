@@ -77,7 +77,7 @@ jobs:
       run: cmake -E make_directory ${{github.workspace}}/build
 
     - name: Build Conan dependencies
-      run: conan install --update --build outdated --build cascade --install-folder "$GITHUB_WORKSPACE/build" "$GITHUB_WORKSPACE" --profile "$~/.conan2/profiles/default"
+      run: conan install --update --build outdated --build cascade --install-folder "$GITHUB_WORKSPACE/build" "$GITHUB_WORKSPACE" --profile "/home/runner/.conan/profiles/default"
       shell: bash
 
     - name: Configure CMake
