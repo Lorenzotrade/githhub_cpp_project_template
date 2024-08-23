@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [lubuntu] #, ubuntu-latest, windows-latest, macos-latest]
+        os: [REMnux] #, ubuntu-latest, windows-latest, macos-latest]
         configs: [Release, Debug]
     steps:
     - name: Checkout
