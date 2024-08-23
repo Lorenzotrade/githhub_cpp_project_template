@@ -1,92 +1,28 @@
-name: build
+name: C/C++ CI
 
-# TODO:
-#
-# * Windows?
-
-on: [push, pull_request]
-
-env:
-  BUILD_EXTRA_CATH_TESTS: ON
-  BUILD_EXTRA_CATH_TOOLS: ON
+on: [push]
 
 jobs:
   build:
+    #runs-on: ${{ matrix.os }}
+    runs-on: self-hosted
+    timeout-minutes: 20
     strategy:
-      matrix:
-        compiler: [ clang ]
-        flavour: [ release ]
-        os: [REMnux] #, macos-11 ]
-
-        include:
-          - compiler: gcc
-            flavour: release
-            os: REMnux
-          - compiler: clang
-            flavour: ubasan
-            os: REMnux
-
       fail-fast: false
-
-    runs-on: ${{ matrix.os }}
-
+      matrix:
+        os: [REMnux] #, ubuntu-latest, windows-latest, macos-latest]
+        configs: [Release, Debug]
     steps:
-    - uses: actions/checkout@v2
-
-    ##################### SETUP #####################
-
-    - name: Prepare CMake repo (REMnux)
-      if: matrix.os == 'REMnux'
+    - name: Checkout
+      uses: actions/checkout@v2.0.0
+    - name: Install conan
       run: |
-        sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg software-properties-common wget
-        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-        sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
-
-    - name: Setup (REMnux)
-      env:
-        # Prevents the apt-get installation of the tzdata package hanging on an interactive user prompt
-        TZ: UTC
-      if: matrix.os == 'REMnux'
-      run: sudo apt-get update && sudo apt-get install -y cmake git libgsl-dev ninja-build python3-pip
-
-    - name: Setup (REMnux - Clang)
-      if: matrix.os == 'REMnux' && matrix.compiler == 'clang'
-      run: sudo apt-get update && sudo apt-get install -y clang libc++-dev libc++1 libc++abi-dev
-
-    - name: Setup (REMnux - GCC)
-      if: matrix.os == 'REMnux' && matrix.compiler == 'gcc'
-      run: sudo apt-get update && sudo apt-get install -y g++-12
-
-    - name: Setup (MacOS 11)
-      if: matrix.os == 'macos-11'
-      # Set LIBRARY_PATH as work around for this issue:
-      # https://github.com/Homebrew/homebrew-core/issues/67427#issuecomment-756511468
-      run: |
-        brew update
-        brew install boost gsl icu4c ninja
-        echo "LIBRARY_PATH=${LIBRARY_PATH}:/usr/local/opt/icu4c/lib" >> $GITHUB_ENV
-        sudo /usr/bin/pip3 install pyyaml==5.3.1
-      # This isn't ideal, but: pyyaml > 5.3.1 but <= 6.0 causes problems on Mac to do with cython; Conan 1.59 doesn't play with pyyaml > 6.0
-
-    - name: Install Conan
-      run: sudo /usr/bin/pip3 install --upgrade conan==1.59.0
-
-    ##################### PREPARE FOR BUILD #####################
-
-    - name: Create build directory
-      run: cmake -E make_directory ${{github.workspace}}/build
-
-    - name: Build Conan dependencies
-      run: conan install --update --build outdated --build cascade --install-folder "$GITHUB_WORKSPACE/build" "$GITHUB_WORKSPACE" --profile "/home/runner/.conan/profiles/default"
-      shell: bash
-
-   # - name: Configure CMake
-   #   run: cmake -GNinja -B "$GITHUB_WORKSPACE/build" -S "$GITHUB_WORKSPACE" -D "CMAKE_TOOLCHAIN_FILE:FILEPATH=$GITHUB_WORKSPACE/.github/cmake-toolchain-files/${{ matrix.os }}.${{ matrix.compiler }}.${{ matrix.flavour }}.cmake" -D "CMAKE_MODULE_PATH:PATH=$GITHUB_WORKSPACE/build"
-   #   shell: bash
-
-    ##################### BUILD #####################
-
-    - name: Build
+        python3 -m pip install --upgrade pip
+        pip3 install conan
+        pip3 install conan --upgrade
+        conan --version
+        conan profile default --detect
+    - name: Build project
       uses: nicledomaS/cmake_build_action@v1.4
       with:
         config: ${{ matrix.configs }}
