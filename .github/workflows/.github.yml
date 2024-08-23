@@ -21,7 +21,7 @@ jobs:
         pip3 install conan
         pip3 install conan --upgrade
         conan --version
-        conan profile default --detect
+        conan profile --detect
     - name: Build project
       uses: nicledomaS/cmake_build_action@v1.4
       with:
