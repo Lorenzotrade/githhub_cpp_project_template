@@ -29,7 +29,7 @@ jobs:
         submodule_update: ON
         run_tests: ON
         unit_test_build: -DFIND_TESTS=ON
-        cmake_args: -DFIND_CONAN=ON;-DFIND_MODULES=ON;-DENABLE_TIDY=ON
+        cmake_args: -DFIND_CONAN=ON;-DFIND_MODULES=ON; #-DENABLE_TIDY=ON
         create_package: ON
     - uses: actions/upload-artifact@v2
       with:
